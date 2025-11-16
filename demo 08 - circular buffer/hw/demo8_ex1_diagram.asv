@@ -1,0 +1,40 @@
+%% Parameters
+Fs        = 44100;      % sr
+delay_ms  = 250;        % delay
+g         = 0.7;        % feedback gain
+
+D = round(delay_ms * 1e-3 * Fs);     % delay in samples
+
+%% Impulse response
+num_impulses = 10;    
+N = D * num_impulses + 1; 
+h = zeros(N,1);
+kmax = floor((N-1)/D);
+for k = 0:kmax
+    h(k*D + 1) = g^k;
+end
+
+figure(1); 
+stem(0:N-1, h, 'filled', 'MarkerSize', 1); grid on;
+xlabel('n (samples)');
+ylabel('h[n]');
+title(sprintf('Impulse Response D = %d samples (%.1f ms), g = %.3f', ...
+              D, 1000*D/Fs, g));
+xlim([0, N-1]);
+
+%% Pole zero diagram
+theta0 = angle(g) / D;
+r = abs(g)^(1/D);
+k = 0:(D-1);
+poles = r * exp(1j * (theta0 + 2*pi*k/D));
+
+figure(2); clf; hold on; grid on; axis equal;
+% Unit circle
+th = linspace(0, 2*pi, 1000);
+plot(cos(th), sin(th), 'k-', 'LineWidth', 0.75);
+% Poles
+plot(real(poles), imag(poles), 'x', 'MarkerSize', 1, 'LineWidth', 1);
+% (No finite zeros)
+xlabel('Real'); ylabel('Imag');
+title(sprintf('Pole zero plot D = %d, g = %.3f (|g|^{1/D} = %.4f)', D, g, r));
+xlim([-1.2 1.2]); ylim([-1.2 1.2]);
